@@ -1,0 +1,102 @@
+# =============================================================================
+# loa-arcturus — Proof-of-Revenue Oracle (Role 3 PoC) — acceptance harness
+# =============================================================================
+# Sprint 4, Task 4.1 (FR-6). ONE-COMMAND BOOT for an external tester:
+#
+#   cp .env.example .env      # (optional — sane defaults below work as-is)
+#   docker compose up         # Postgres + Redis + auto-migrate + oracle
+#
+# What this proves (ROLE3-ORACLE-SPEC.md §10.2 / sdd.md §7.1):
+#   * boots on a stranger's machine with ZERO 0xhoneyjar-hosted services and
+#     ZERO 0xhoneyjar-only secrets — only the public Docker images below;
+#   * migrations 0001-0005 (incl. THE GAP payer-persistence table) run
+#     AUTOMATICALLY on boot via the one-shot `migrate` service;
+#   * the `oracle` service then seeds + verifies in keyless MOCK mode
+#     (CHAIN_PROVIDER=mock) and exits 0 when all keyless assertions pass.
+#
+# Non-conflicting project name + host ports so this never collides with a
+# tester's existing Postgres/Redis (override via .env if 5544/6399 are taken).
+# Data lives on tmpfs — the acceptance DB is throwaway by design; tear down
+# with `docker compose down -v`.
+#
+# NO fee / treasury / PoL service anywhere. Read-only measurement layer only.
+# =============================================================================
+
+name: arcturus-acceptance
+
+services:
+  # --- Postgres: the settlements + ledger store -----------------------------
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-arcturus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-arcturus}
+      POSTGRES_DB: ${POSTGRES_DB:-arcturus}
+    ports:
+      - "${PGPORT_HOST:-5544}:5432"
+    # Throwaway acceptance DB → tmpfs, nothing persisted across runs.
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-arcturus} -d ${POSTGRES_DB:-arcturus}"]
+      interval: 2s
+      timeout: 3s
+      retries: 40
+
+  # --- Redis: x402 nonce / replay dedup (best-effort in settle()) -----------
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDISPORT_HOST:-6399}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 40
+
+  # --- Auto-migrations: apply 0001-0005 once, then exit ---------------------
+  # Reuses migrations/run-migrations.sh — the SAME script Sprints 1-3 live-
+  # verified green on Postgres 16 (applies 0001..0005 in order, then drives the
+  # real settle() insert shapes in a rolled-back smoke test).
+  migrate:
+    image: postgres:16
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-arcturus}:${POSTGRES_PASSWORD:-arcturus}@db:5432/${POSTGRES_DB:-arcturus}
+    volumes:
+      - ./migrations:/migrations:ro
+    entrypoint: ["bash", "/migrations/run-migrations.sh"]
+    restart: "no"
+
+  # --- Oracle: keyless mock seed + verify (the meter) -----------------------
+  # The PoC oracle is a CLI verdict surface, not a long-running server
+  # (sdd.md §5: an HTTP read API is optional and NOT required for acceptance).
+  # On boot it seeds the deterministic synthetic scenario through the REAL
+  # settle() path, then runs the Assertion A-D harness in mock mode and exits 0
+  # on pass. Swap CHAIN_PROVIDER / supply a key in .env for the live legs.
+  oracle:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-arcturus}:${POSTGRES_PASSWORD:-arcturus}@db:5432/${POSTGRES_DB:-arcturus}
+      REDIS_URL: redis://redis:6379
+      # Keyless by default — mock proves filter logic, dune proves real data.
+      CHAIN_PROVIDER: ${CHAIN_PROVIDER:-mock}
+      # Optional tuning / live-leg inputs (all read from .env when present).
+      AFFILIATE_ALLOWLIST: ${AFFILIATE_ALLOWLIST:-}
+      DUST_FLOOR_MICRO: ${DUST_FLOOR_MICRO:-}
+      BEPOLIA_RPC_URL: ${BEPOLIA_RPC_URL:-}
+      SEED_PRIVATE_KEY: ${SEED_PRIVATE_KEY:-}
+      DUNE_SIM_API_KEY: ${DUNE_SIM_API_KEY:-}
+    command: ["sh", "-c", "pnpm seed:bepolia && pnpm verify"]
+    restart: "no"

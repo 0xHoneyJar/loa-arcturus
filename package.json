@@ -1,0 +1,32 @@
+{
+  "name": "loa-arcturus",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Proof-of-Revenue Oracle (Role 3) — read-only, anti-sybil revenue-truth meter for the Berachain agent economy. Derived from loa-freeside (AGPL-3.0).",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "seed:bepolia": "tsx scripts/seed-bepolia.ts",
+    "verify": "tsx scripts/verify.ts"
+  },
+  "dependencies": {
+    "express": "^4.21.1",
+    "ioredis": "^5.9.1",
+    "pg": "^8.16.3",
+    "pino": "^9.5.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.19.5",
+    "@types/pg": "^8.16.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  }
+}

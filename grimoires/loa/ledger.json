@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "next_sprint_number": 5,
+  "active_cycle": "cycle-001",
+  "cycles": [
+    {
+      "id": "cycle-001",
+      "label": "Role 3 — Proof-of-Revenue Oracle PoC",
+      "status": "active",
+      "created_at": "2026-06-10T18:25:30Z",
+      "prd": "grimoires/loa/prd.md",
+      "sdd": "grimoires/loa/sdd.md",
+      "sprint_plan": "grimoires/loa/sprint.md",
+      "spec": "ROLE3-ORACLE-SPEC.md",
+      "sprints": [
+        {
+          "number": 1,
+          "local_id": "sprint-1",
+          "theme": "AGPL Scaffolding & Curated Copy",
+          "epic": "loa-arcturus-mk0",
+          "status": "completed",
+          "build_order_steps": [
+            1,
+            2
+          ],
+          "completed_at": "2026-06-10",
+          "note": "static-green; live clean-DB run deferred (no PG in env)"
+        },
+        {
+          "number": 2,
+          "local_id": "sprint-2",
+          "theme": "The Gap (Payer Persistence) + Bepolia Config",
+          "epic": "loa-arcturus-ict",
+          "status": "completed",
+          "completed_at": "2026-06-10",
+          "note": "THE GAP closed (FR-3): settle() persists payer_address into x402_settlements (0005). Full 0001->0005 chain LIVE-VERIFIED green on Postgres 16 (UNIQUE+append-only confirmed). Bepolia 80069 added (OPEN-6 confirmed vs ethereum-lists registry); facilitator config-driven. HONEY standard left UNVERIFIED (OPEN-2). Follow-up loa-arcturus-7bi (tx_hash chain-confirmation) -> Sprint 4.",
+          "build_order_steps": [
+            3,
+            4
+          ]
+        },
+        {
+          "number": 3,
+          "local_id": "sprint-3",
+          "theme": "The Oracle — Ruleset & Realness Score",
+          "epic": "loa-arcturus-6ip",
+          "status": "planned",
+          "build_order_steps": [
+            5
+          ]
+        },
+        {
+          "number": 4,
+          "local_id": "sprint-4",
+          "theme": "Acceptance Harness, Proof-Schema Seam & E2E",
+          "epic": "loa-arcturus-vmz",
+          "status": "planned",
+          "build_order_steps": [
+            6,
+            7
+          ]
+        }
+      ]
+    }
+  ]
+}

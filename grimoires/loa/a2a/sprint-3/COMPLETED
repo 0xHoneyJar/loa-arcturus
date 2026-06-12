@@ -1,0 +1,60 @@
+Sprint 3 — The Oracle — Qualified Revenue Ruleset & Realness Score — COMPLETED
+
+Verdict: APPROVED (security/quality audit, single-model — flatline disabled by config)
+Date: 2026-06-11
+Epic: loa-arcturus-6ip (closed)
+Tasks closed: loa-arcturus-{208,itm,lun,amp,he5,chu,fdc} (3.1–3.7)
+
+Cycle: implement (reviewer.md) → review (engineer-feedback.md: All good w/ noted
+       non-blocking concerns) → audit (auditor-sprint-feedback.md: APPROVED) → COMPLETED.
+
+THE ORACLE DELIVERED (FR-5): net-new src/oracle/ module computes per service
+{raw_micro, qualified_micro, score ∈ [0,1], flagged_affiliated_micro, methodology}
+from x402_settlements (migration 0005) + IChainProvider. All five §5 filters
+implemented: (1) affiliate exclusion flag-not-count, (2) dust floor, (3)
+circular-flow cycle detection on a directed funding graph (acknowledged NET-NEW,
+spec :301-305), (4) wallet-age weighting, (5) external-origin bonus. Filters 1-3
+are binary gates feeding the headline; 4-5 are diagnostics that do NOT enter the
+reproducible headline (OPEN-5 reconciliation).
+
+LIVE DB VERIFICATION (the Sprint-3 mandate — NOT deferred): migrations 0001→0005
+applied GREEN on a throwaway Postgres 16 (Docker, psql inside container). Ran
+src/oracle/verify-live.ts against the real x402_settlements table with the keyless
+MockChainProvider supplying the funding graph:
+  - svc-honeyjar:   raw $100.00  flagged_affiliated $80.00  qualified $20.00  score 0.2000
+  - svc-thirdparty: raw $200.000005  flagged $0  qualified $100.00  score ≈0.5000
+ANTI-SELF-GRADING PROVEN: the 0xhoneyjar service's affiliated $80 is FLAGGED and
+EXCLUDED from the headline → score 0.20 (the oracle does not flatter the team; it
+reports the real number). FARM-REDUCES / CLEAN-SURVIVES PROVEN: svc-thirdparty's
+circular-flow farm ($100, Filter 3) and dust ($0.000005, Filter 2) are dropped;
+both clean aged externally-funded payers ($40+$60) survive → score ≈0.50 vs 1.0
+clean-only. DETERMINISM (Assertion D precursor): byte-identical output on rerun and
+identical sha256 across two SEPARATE process invocations. DB guards observed live:
+UNIQUE(chain_id,tx_hash) rejected a duplicate; prevent_mutation() blocked UPDATE.
+Container torn down (docker rm -f); no lingering containers.
+
+PROVENANCE HONESTY (the product): OPEN-3 affiliate allowlist is config-driven
+(AFFILIATE_ALLOWLIST / _FILE) seeded ONLY with clearly-labeled, intentionally-
+unmatchable placeholders — NO real address invented. OPEN-4 dust floor = $0.01
+(10_000 micro-USD), documented chosen assumption, tunable via DUST_FLOOR_MICRO.
+OPEN-5 weighting-vs-binary reconciliation written down (headline = unweighted
+binary-gate ratio; 4-5 are diagnostics) so an external party reproduces the same
+number. Filter 3 marked NET-NEW, not claimed inherited. Methodology emitted every
+run + docs/ORACLE-METHODOLOGY.md (also closes the dangling config.ts:17 reference).
+
+STATIC: Sprint-3 oracle subset typechecks CLEAN (tsc scoped → exit 0); 10/10 oracle
+unit tests pass. Whole-project tsc/test redness is entirely the pre-existing copied
+Sprint-1 adapters (loa-arcturus-hkj, deferred P2) + missing vitest config — NOT
+Sprint-3 code. Flagged as Sprint-4 CI-greenability work, not fixed here.
+
+Files: src/oracle/{types,settlements-repo,oracle,config,funding-graph,synthetic-graph,
+index,verify-live}.ts (new), src/adapters/chain/mock-chain-provider.ts (new),
+docs/ORACLE-METHODOLOGY.md (new), src/oracle/oracle.test.ts (new).
+
+Findings: 2 INFO (Number() precision ceiling ≈$9B/service; unnecessary SET LOCAL on
+RLS-stripped table) — both non-blocking, documented.
+
+No git staging/commit/push/PR performed — human stages. ../loa-freeside untouched
+(0 dirty lines). Read-only / fee-free / PoL-free posture preserved; Role 1 OUT.
+Scope: Sprint 3 ONLY. Sprint 4 NOT started (no docker-compose, no seed/verify
+acceptance harness, no CI, no README quickstart, no PROOF-SCHEMA.md). STOPPING here.

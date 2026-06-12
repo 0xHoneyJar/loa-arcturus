@@ -1,0 +1,42 @@
+Sprint 2 — The Gap (Payer Persistence) + Bepolia Config — COMPLETED
+
+Verdict: APPROVED - LETS FUCKING GO (security/quality audit, single-model — flatline disabled by config)
+Date: 2026-06-10
+Epic: loa-arcturus-ict (closed)
+Tasks closed: loa-arcturus-{l7u,bpr,axx,nz5,yuv} (2.1–2.5)
+Follow-up filed: loa-arcturus-7bi (tx_hash chain-confirmation → Sprint 4, SDD §5.4)
+
+Cycle: implement (reviewer.md) → review (engineer-feedback.md: All good w/ noted concerns)
+       → audit (auditor-sprint-feedback.md: APPROVED) → COMPLETED.
+
+THE GAP CLOSED (FR-3): settle() now persists payer_address=proof.from into
+x402_settlements (migration 0005) on every settlement. The payload='{}' discard
+is gone from the live settle() path. Qualified Revenue (Sprint 3) is unblocked.
+
+LIVE DB VERIFICATION (the Sprint-2 mandate — NOT deferred this time): the full
+migration chain 0001→0005 was RUN GREEN against a clean throwaway Postgres 16 in
+Docker. Confirmed live: x402_settlements with payer_address TEXT NOT NULL, the
+UNIQUE(chain_id,tx_hash) constraint rejecting a duplicate, per-chain uniqueness,
+append-only triggers blocking UPDATE/DELETE, and the full settle() insert path
+(nonce→mint→usage_event→x402_settlements→lot entry) end-to-end. Containers torn
+down (docker rm -f). Re-ran the updated run-migrations.sh smoke SQL → exit 0.
+
+FR-4: Bepolia 80069 added to CHAIN_CONFIGS (symbol BERA, decimals 18, RPC
+https://bepolia.rpc.berachain.com, explorer https://bepolia.beratrail.io) —
+params CONFIRMED against the ethereum-lists EVM chain registry (chainid.network),
+resolving OPEN-6. Mainnet 80094 retained. Facilitator block is now config-driven
+(chainKey default 'bepolia' + settlementToken default 'HONEY'/'USDC'); zero
+base/USDC/8453 literals remain on the facilitator path.
+
+PROVENANCE HONESTY: HONEY token standard / Bepolia contract address left
+UNVERIFIED with an explicit confirm-against-source task (OPEN-2) in
+docs/SETTLEMENT-MODEL.md — nothing guessed. Self-broadcast model documented.
+Modified copied files' AGPL §5(a) notices updated from "verbatim" to dated change
+records. No fee/treasury/PoL code. Read-only posture preserved.
+
+Files: migrations/0005_x402_settlements.sql (new), src/services/x402-settlement.ts
+(mod), src/core/ports/chain-provider.ts (mod), src/routes/x402.routes.ts (mod),
+migrations/run-migrations.sh (mod), docs/SETTLEMENT-MODEL.md (new).
+
+No git staging/commit/push/PR performed — human stages. ../loa-freeside untouched.
+Scope: Sprint 2 ONLY. Sprint 3 NOT started (no oracle module, no filters, no score).

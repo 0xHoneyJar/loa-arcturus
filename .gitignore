@@ -1,0 +1,37 @@
+
+# LOA SUBMODULE SYMLINKS (added by mount-submodule.sh)
+# Symlinks to .loa/ submodule — recreated on mount
+.claude/scripts
+.claude/protocols
+.claude/hooks
+.claude/data
+.claude/schemas
+.claude/loa/CLAUDE.loa.md
+.claude/loa/reference
+.claude/loa/feedback-ontology.yaml
+.claude/loa/learnings
+.claude/settings.json
+.claude/checksums.json
+.loa-state/
+.claude.backup.*
+
+# DEPENDENCIES — installed locally, never committed
+node_modules/
+dist/
+
+# SECRETS / LOCAL ENV — never commit (Bedrock bearer token + API keys live here)
+.env.local
+.env
+# Local Bedrock config override (holds {env:} refs + allowlist patterns; not for commit)
+.loa.config.yaml
+
+# OPERATIONAL / AGENT-RUN ARTIFACTS — local dev exhaust, never published.
+# Raw tool-call logs, task state, issue-tracker state, and agent execution
+# trajectories. These embed absolute local paths and full command traces and
+# are not part of the curated work product.
+.run/
+.beads/
+grimoires/loa/a2a/trajectory/
+grimoires/loa/a2a/flatline/
+grimoires/loa/a2a/cost-ledger.jsonl
+grimoires/loa/a2a/.daily-spend-*.json

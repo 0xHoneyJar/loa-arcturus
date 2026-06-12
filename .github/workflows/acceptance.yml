@@ -1,0 +1,89 @@
+# =============================================================================
+# loa-arcturus — Acceptance Harness (Sprint 4, Task 4.4, FR-6)
+# =============================================================================
+# Proves the Proof-of-Revenue Oracle boots and self-grades GREEN on a clean
+# machine with ZERO secrets — so an external tester sees the badge pass before
+# they even clone (ROLE3-ORACLE-SPEC.md §10.4 / sdd.md §7.3).
+#
+# Runs the SAME keyless flow as `docker compose up`:
+#   migrations 0001-0005  →  pnpm seed:bepolia (mock)  →  pnpm verify (mock)
+# in CHAIN_PROVIDER=mock, which exercises the full §5 filter logic against the
+# deterministic synthetic funding graph. NO 0xhoneyjar secret, no Dune key, no
+# Bepolia key, no `secrets:` reference anywhere — mock = filter logic; dune =
+# real data. `pnpm verify` exits 0 iff Assertions A, B, D pass (C is reported
+# TESTER-REQUIRED in mock — synthetic tx_hashes do not resolve on the explorer,
+# and the harness never fakes that).
+# =============================================================================
+name: Acceptance Harness (keyless, mock mode)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Read-only token: this workflow needs no write scopes and no secrets.
+permissions:
+  contents: read
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Keyless by design — declared here so it is impossible to depend on a key.
+    env:
+      CHAIN_PROVIDER: mock
+      DATABASE_URL: postgres://arcturus:arcturus@localhost:5432/arcturus
+      REDIS_URL: redis://localhost:6379
+
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_USER: arcturus
+          POSTGRES_PASSWORD: arcturus
+          POSTGRES_DB: arcturus
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U arcturus -d arcturus"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 40
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 40
+
+    steps:
+      # No submodules: the acceptance harness needs only app source, scripts,
+      # and migrations — not the .loa/ framework submodule.
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm (pinned by package.json packageManager)
+        run: corepack enable
+
+      - name: Install dependencies (frozen lockfile, no network resolution)
+        run: pnpm install --frozen-lockfile
+
+      # Auto-migrations: apply 0001-0005 via the SAME script docker-compose runs.
+      - name: Apply migrations 0001-0005
+        run: bash migrations/run-migrations.sh
+
+      # The §10.3 / §10.4 acceptance commands, keyless mock mode.
+      - name: Seed (real settle() path, mock) and verify (Assertions A-D)
+        run: pnpm seed:bepolia && pnpm verify

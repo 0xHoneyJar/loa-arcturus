@@ -1,0 +1,54 @@
+loa-arcturus — Proof-of-Revenue Oracle (Role 3)
+Copyright (C) 2026 0xHoneyJar
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version. See the LICENSE file for the full license text.
+
+================================================================================
+Derivation & Attribution
+================================================================================
+
+loa-arcturus is a DERIVATIVE WORK. Its off-chain measurement primitives are a
+curated copy (not a full fork) of source files from:
+
+    loa-freeside  —  "Freeside", the L4 substrate of the Loa protocol
+    Author/Owner:  0xHoneyJar  (https://github.com/0xHoneyJar)
+    License:       GNU Affero General Public License v3.0 (AGPL-3.0)
+
+The copy is AGPL-3.0 → AGPL-3.0, so direct reuse is permitted under the
+upstream license. Per AGPL §5(a), modified files carry notices stating that
+they were changed and the date of change; per the project's provenance
+discipline, every copied file additionally records its exact upstream path and
+the source commit it was taken from (see PROVENANCE.md and the per-file
+"Provenance" header block added on copy).
+
+Upstream source snapshot used for this derivation:
+
+    repo:    loa-freeside (sibling working tree ../loa-freeside)
+    commit:  f0354ff14dff81ea1ed5189f6af00a0afcf068c3
+    dated:   2026-06-08
+
+Files derived from loa-freeside (curated copy — see PROVENANCE.md for the
+authoritative per-file mapping):
+
+    src/services/x402-settlement.ts        ← packages/services/x402-settlement.ts
+    src/services/credit-lot-service.ts     ← packages/services/credit-lot-service.ts
+    src/services/community-scope.ts        ← packages/services/community-scope.ts
+    src/services/purpose-service.ts        ← packages/services/purpose-service.ts
+    src/services/feature-flags.ts          ← packages/services/feature-flags.ts
+    src/routes/x402.routes.ts              ← packages/routes/x402.routes.ts
+    src/adapters/storage/lot-entry-repository.ts
+                                           ← packages/adapters/storage/lot-entry-repository.ts
+    src/adapters/chain/dune-sim-client.ts  ← packages/adapters/chain/dune-sim-client.ts
+    src/adapters/chain/hybrid-provider.ts  ← packages/adapters/chain/hybrid-provider.ts
+    src/adapters/chain/provider-factory.ts ← packages/adapters/chain/provider-factory.ts
+    src/core/ports/chain-provider.ts       ← packages/core/ports/chain-provider.ts
+    migrations/*                           ← themes/sietch/drizzle/migrations/0008..0012
+                                             (resolved / reconciled — see migrations/PROVENANCE.md)
+
+================================================================================
+This software contains NO fee, treasury, or Proof-of-Liquidity emission logic.
+It is a read-only measurement layer (Role 3). See ROLE3-ORACLE-SPEC.md §0, §9.
+================================================================================
